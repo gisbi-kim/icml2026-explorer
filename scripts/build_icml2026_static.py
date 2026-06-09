@@ -636,6 +636,7 @@ button.action {{
   font-weight: 650;
 }}
 button.action.primary {{ background: var(--ink); color: white; border-color: var(--ink); }}
+button.action.compact {{ padding: 0 12px; min-width: 132px; }}
 .chart-stack {{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }}
 .bar-row {{ display: grid; grid-template-columns: minmax(92px, 150px) minmax(0, 1fr) 54px; gap: 10px; align-items: center; margin: 8px 0; }}
 .bar-label {{ font-size: 13px; overflow-wrap: anywhere; }}
@@ -663,7 +664,27 @@ button.action.primary {{ background: var(--ink); color: white; border-color: var
   margin-bottom: 10px;
 }}
 .results-head h2 {{ margin: 0; font-size: 17px; }}
+.results-tools {{ display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }}
 .count {{ color: var(--muted); font-size: 14px; }}
+.pagination {{
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 10px 0;
+}}
+.page-btn {{
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  width: 38px;
+  height: 34px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 800;
+}}
+.page-btn:disabled {{ color: #a8b0bd; cursor: default; background: #f8fafc; }}
+.page-label {{ color: var(--muted); font-size: 13px; min-width: 190px; text-align: center; }}
 .paper-list {{ display: grid; gap: 10px; }}
 .paper {{
   background: var(--panel);
@@ -721,6 +742,9 @@ footer {{ color: var(--muted); font-size: 12px; margin-top: 20px; }}
   .metrics {{ grid-template-columns: 1fr; }}
   .segmented {{ grid-template-columns: repeat(2, 1fr); }}
   .actions {{ grid-template-columns: 1fr; }}
+  .results-head {{ align-items: flex-start; flex-direction: column; }}
+  .results-tools, .pagination {{ justify-content: flex-start; width: 100%; }}
+  .page-label {{ min-width: 0; flex: 1; }}
   .paper-top {{ gap: 6px; }}
 }}
 </style>
@@ -789,9 +813,14 @@ footer {{ color: var(--muted); font-size: 12px; margin-top: 20px; }}
       </div>
       <div class="results-head">
         <h2>Papers</h2>
-        <div class="count" id="resultCount"></div>
+        <div class="results-tools">
+          <button class="action compact" id="abstractAllBtn" type="button" aria-pressed="false">Open Abstracts</button>
+          <div class="count" id="resultCount"></div>
+        </div>
       </div>
+      <div id="pagerTop"></div>
       <div class="paper-list" id="papers"></div>
+      <div id="pagerBottom"></div>
       <footer>
         Topic and keyword labels are lightweight title/abstract heuristics, not official ICML tracks.
       </footer>
@@ -802,6 +831,7 @@ footer {{ color: var(--muted); font-size: 12px; margin-top: 20px; }}
 <script id="paper-data" type="application/json">{escaped_data}</script>
 <script>
 const DATA = JSON.parse(document.getElementById('paper-data').textContent);
+const PAGE_SIZE = 500;
 const papers = DATA.papers.map(p => ({{
   ...p,
   searchText: [
@@ -823,7 +853,9 @@ const state = {{
   topic: 'all',
   sort: 'decision',
   hasVirtual: false,
-  keyword: ''
+  keyword: '',
+  page: 1,
+  abstractsOpen: false
 }};
 const els = {{
   metrics: document.getElementById('metrics'),
@@ -839,7 +871,10 @@ const els = {{
   keywordChips: document.getElementById('keywordChips'),
   authorChart: document.getElementById('authorChart'),
   papers: document.getElementById('papers'),
-  resultCount: document.getElementById('resultCount')
+  resultCount: document.getElementById('resultCount'),
+  abstractAllBtn: document.getElementById('abstractAllBtn'),
+  pagerTop: document.getElementById('pagerTop'),
+  pagerBottom: document.getElementById('pagerBottom')
 }};
 
 function fmt(n) {{ return Number(n || 0).toLocaleString(); }}
@@ -857,6 +892,8 @@ function initFromUrl() {{
   state.sort = params.get('sort') || 'decision';
   state.keyword = params.get('keyword') || '';
   state.hasVirtual = params.get('virtual') === '1';
+  state.page = Math.max(1, Number(params.get('page') || 1));
+  state.abstractsOpen = params.get('abstracts') === 'open';
   els.q.value = state.q;
   els.sort.value = state.sort;
   els.hasVirtual.checked = state.hasVirtual;
@@ -869,9 +906,12 @@ function updateUrl() {{
   if (state.sort !== 'decision') params.set('sort', state.sort);
   if (state.keyword) params.set('keyword', state.keyword);
   if (state.hasVirtual) params.set('virtual', '1');
+  if (state.page > 1) params.set('page', String(state.page));
+  if (state.abstractsOpen) params.set('abstracts', 'open');
   const query = params.toString();
   history.replaceState(null, '', query ? `?${{query}}` : location.pathname);
 }}
+function resetPage() {{ state.page = 1; }}
 function populateStatic() {{
   const s = DATA.summary;
   els.metrics.innerHTML = [
@@ -952,48 +992,69 @@ function paperCard(p) {{
     p.virtual_url ? `<a href="${{esc(p.virtual_url)}}">Poster page</a>` : '',
     p.oral_url ? `<a href="${{esc(p.oral_url)}}">Oral page</a>` : ''
   ].filter(Boolean).join('');
-  return `<article class="paper">
+  return `<article class="paper${{state.abstractsOpen ? ' open' : ''}}">
     <div class="paper-top">
       <div>
         <h3>${{esc(p.title)}}</h3>
         <div class="badge-row">${{badges}}</div>
         <div class="authors">${{esc(authors)}} · ${{esc((p.institutions || []).slice(0, 8).join(', '))}} · #${{esc(p.number || p.id)}}</div>
       </div>
-      <button class="toggle" title="Expand abstract" aria-label="Expand abstract">+</button>
+      <button class="toggle" title="Toggle abstract" aria-label="Toggle abstract">${{state.abstractsOpen ? '-' : '+'}}</button>
     </div>
     <p class="abstract">${{esc(p.abstract)}}</p>
     <div class="links">${{links}}</div>
   </article>`;
 }}
+function paginationHtml(totalPages) {{
+  if (totalPages <= 1) return '';
+  const prev = Math.max(1, state.page - 1);
+  const next = Math.min(totalPages, state.page + 1);
+  return `<nav class="pagination" aria-label="Paper pages">
+    <button class="page-btn" data-page="${{prev}}" ${{state.page === 1 ? 'disabled' : ''}} aria-label="Previous page" title="Previous page">&larr;</button>
+    <div class="page-label">Page ${{fmt(state.page)}} / ${{fmt(totalPages)}} &middot; max ${{fmt(PAGE_SIZE)}} cards</div>
+    <button class="page-btn" data-page="${{next}}" ${{state.page === totalPages ? 'disabled' : ''}} aria-label="Next page" title="Next page">&rarr;</button>
+  </nav>`;
+}}
 function render() {{
-  updateUrl();
   document.querySelectorAll('#decisionSeg button').forEach(btn => btn.classList.toggle('active', btn.dataset.decision === state.decision));
   els.topic.value = state.topic;
+  els.abstractAllBtn.textContent = state.abstractsOpen ? 'Close Abstracts' : 'Open Abstracts';
+  els.abstractAllBtn.setAttribute('aria-pressed', state.abstractsOpen ? 'true' : 'false');
   const out = filteredPapers();
+  const totalPages = Math.max(1, Math.ceil(out.length / PAGE_SIZE));
+  if (state.page > totalPages) state.page = totalPages;
+  if (state.page < 1) state.page = 1;
+  updateUrl();
   renderCharts(out);
-  els.resultCount.textContent = `${{fmt(out.length)}} of ${{fmt(papers.length)}} papers`;
+  const startIndex = out.length ? (state.page - 1) * PAGE_SIZE : 0;
+  const endIndex = Math.min(out.length, startIndex + PAGE_SIZE);
+  const rangeLabel = out.length ? `${{fmt(startIndex + 1)}}-${{fmt(endIndex)}} of ${{fmt(out.length)}}` : `0 of ${{fmt(out.length)}}`;
+  els.resultCount.textContent = `${{rangeLabel}} filtered · ${{fmt(papers.length)}} total`;
+  const pager = paginationHtml(totalPages);
+  els.pagerTop.innerHTML = pager;
+  els.pagerBottom.innerHTML = pager;
   if (!out.length) {{
     els.papers.innerHTML = '<div class="panel empty">No papers match the current filters.</div>';
     return;
   }}
-  const limit = 220;
-  els.papers.innerHTML = out.slice(0, limit).map(paperCard).join('') +
-    (out.length > limit ? `<div class="panel empty">Showing first ${{limit.toLocaleString()}} papers. Narrow the filters or download JSON for the full set.</div>` : '');
+  els.papers.innerHTML = out.slice(startIndex, endIndex).map(paperCard).join('');
 }}
-els.q.addEventListener('input', e => {{ state.q = e.target.value; render(); }});
+els.q.addEventListener('input', e => {{ state.q = e.target.value; resetPage(); render(); }});
 els.decisionSeg.addEventListener('click', e => {{
   const btn = e.target.closest('button[data-decision]');
   if (!btn) return;
   state.decision = btn.dataset.decision;
+  resetPage();
   render();
 }});
-els.topic.addEventListener('change', e => {{ state.topic = e.target.value; render(); }});
-els.sort.addEventListener('change', e => {{ state.sort = e.target.value; render(); }});
-els.hasVirtual.addEventListener('change', e => {{ state.hasVirtual = e.target.checked; render(); }});
+els.topic.addEventListener('change', e => {{ state.topic = e.target.value; resetPage(); render(); }});
+els.sort.addEventListener('change', e => {{ state.sort = e.target.value; resetPage(); render(); }});
+els.hasVirtual.addEventListener('change', e => {{ state.hasVirtual = e.target.checked; resetPage(); render(); }});
 els.keywordChips.addEventListener('click', e => {{
   const chip = e.target.closest('button[data-keyword]');
   if (!chip) return;
   state.keyword = state.keyword === chip.dataset.keyword ? '' : chip.dataset.keyword;
+  resetPage();
   render();
 }});
 els.resetBtn.addEventListener('click', () => {{
@@ -1003,9 +1064,24 @@ els.resetBtn.addEventListener('click', () => {{
   state.sort = 'decision';
   state.hasVirtual = false;
   state.keyword = '';
+  state.page = 1;
+  state.abstractsOpen = false;
   els.q.value = '';
   els.sort.value = 'decision';
   els.hasVirtual.checked = false;
+  render();
+}});
+function handlePagerClick(e) {{
+  const btn = e.target.closest('button[data-page]');
+  if (!btn || btn.disabled) return;
+  state.page = Math.max(1, Number(btn.dataset.page || 1));
+  render();
+  document.querySelector('.results-head').scrollIntoView({{behavior: 'smooth', block: 'start'}});
+}}
+els.pagerTop.addEventListener('click', handlePagerClick);
+els.pagerBottom.addEventListener('click', handlePagerClick);
+els.abstractAllBtn.addEventListener('click', () => {{
+  state.abstractsOpen = !state.abstractsOpen;
   render();
 }});
 els.downloadBtn.addEventListener('click', () => {{
