@@ -738,6 +738,12 @@ button.action.compact {{ padding: 0 12px; min-width: 132px; }}
 }}
 .paper-top {{ display: flex; align-items: flex-start; gap: 10px; justify-content: space-between; }}
 .paper h3 {{ margin: 0; font-size: 16px; line-height: 1.35; }}
+.search-hit {{
+  background: #fef08a;
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 2px;
+}}
 .badge-row {{ display: flex; flex-wrap: wrap; gap: 7px; margin: 8px 0; }}
 .badge {{
   border-radius: 999px;
@@ -926,6 +932,25 @@ function fmt(n) {{ return Number(n || 0).toLocaleString(); }}
 function esc(s) {{
   return String(s || '').replace(/[&<>"']/g, c => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c]));
 }}
+function regexEsc(s) {{
+  return String(s).replace(/[-\\/\\\\^$*+?.()|[\\]{{}}]/g, '\\\\$&');
+}}
+function queryTerms() {{
+  return state.q.trim().split(/\\s+/).filter(term => term.length >= 2).sort((a, b) => b.length - a.length);
+}}
+function highlightText(s) {{
+  let text = esc(s);
+  const terms = queryTerms();
+  if (!terms.length) return text;
+  const pattern = new RegExp(`(${{terms.map(term => regexEsc(esc(term))).join('|')}})`, 'gi');
+  return text.replace(pattern, '<mark class="search-hit">$1</mark>');
+}}
+function highlightRenderedMetadata() {{
+  if (!queryTerms().length) return;
+  els.papers.querySelectorAll('.authors').forEach(el => {{
+    el.innerHTML = highlightText(el.textContent);
+  }});
+}}
 function buildSearchText(p) {{
   return [
     p.title,
@@ -1084,6 +1109,7 @@ function filteredPapers() {{
 }}
 function paperCard(p) {{
   const authors = (p.authors || []).slice(0, 16).join(', ') + ((p.authors || []).length > 16 ? `, +${{p.authors.length - 16}} more` : '');
+  const institutions = (p.institutions || []).slice(0, 8).join(', ');
   const badges = [
     `<span class="badge ${{p.decision}}">${{decisionLabel(p.decision)}}</span>`,
     `<span class="badge">${{esc(p.topic)}}</span>`,
@@ -1100,13 +1126,13 @@ function paperCard(p) {{
   return `<article class="paper${{state.abstractsOpen ? ' open' : ''}}">
     <div class="paper-top">
       <div>
-        <h3>${{esc(p.title)}}</h3>
+        <h3>${{highlightText(p.title)}}</h3>
         <div class="badge-row">${{badges}}</div>
         <div class="authors">${{esc(authors)}} · ${{esc((p.institutions || []).slice(0, 8).join(', '))}} · #${{esc(p.number || p.id)}}</div>
       </div>
       <button class="toggle" title="Toggle abstract" aria-label="Toggle abstract">${{state.abstractsOpen ? '-' : '+'}}</button>
     </div>
-    <p class="abstract">${{esc(abstractText)}}</p>
+    <p class="abstract">${{highlightText(abstractText)}}</p>
     <div class="links">${{links}}</div>
   </article>`;
 }}
@@ -1144,6 +1170,7 @@ function render() {{
     return;
   }}
   els.papers.innerHTML = out.slice(startIndex, endIndex).map(paperCard).join('');
+  highlightRenderedMetadata();
 }}
 els.q.addEventListener('input', e => {{
   state.q = e.target.value;
@@ -1230,7 +1257,7 @@ els.papers.addEventListener('click', async e => {{
   const index = Array.from(els.papers.querySelectorAll('.paper')).indexOf(card);
   const paper = pagePapers[index];
   const abstract = card.querySelector('.abstract');
-  if (paper && abstract) abstract.textContent = paper.abstract || 'No abstract available.';
+  if (paper && abstract) abstract.innerHTML = highlightText(paper.abstract || 'No abstract available.');
   card.classList.toggle('open');
   btn.textContent = card.classList.contains('open') ? '-' : '+';
 }});

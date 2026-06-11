@@ -181,6 +181,12 @@ button.action.compact { padding: 0 12px; min-width: 132px; }
 }
 .paper-top { display: flex; align-items: flex-start; gap: 10px; justify-content: space-between; }
 .paper h3 { margin: 0; font-size: 16px; line-height: 1.35; }
+.search-hit {
+  background: #fef08a;
+  color: inherit;
+  border-radius: 3px;
+  padding: 0 2px;
+}
 .badge-row { display: flex; flex-wrap: wrap; gap: 7px; margin: 8px 0; }
 .badge {
   border-radius: 999px;
@@ -240,7 +246,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 20px; }
 <header>
   <div class="wrap">
     <h1>ICML 2026 Paper Explorer</h1>
-    <p class="subhead">Accepted papers from official ICML virtual data · Seoul, South Korea · July 6-11, 2026 · Generated 2026-06-11T18:59:01+09:00</p>
+    <p class="subhead">Accepted papers from official ICML virtual data · Seoul, South Korea · July 6-11, 2026 · Generated 2026-06-11T19:09:36+09:00</p>
     <div class="source-row">
       <a href="https://icml.cc/virtual/2026/papers.html">Official papers page</a>
       <a href="https://openreview.net/group?id=ICML.cc/2026/Conference">OpenReview venue</a>
@@ -327,7 +333,7 @@ const ABSTRACTS_URL = 'icml2026_abstracts.json';
 const FULL_DATA_URL = 'icml2026_papers.json';
 const DEFAULT_PAGE_SIZE = 100;
 const PAGE_SIZE_OPTIONS = [100, 250, 500];
-let DATA = {summary: {"conference": "ICML 2026", "generated": "2026-06-11T18:59:01+09:00", "n_papers": 6634, "decisions": {"oral": 168, "spotlight": 406, "regular": 5999, "other": 61}, "topics": {"Reinforcement Learning and Agents": 458, "Vision and Multimodal": 337, "Deep Learning->Generative Models and Autoencoders": 184, "Theory and Foundations": 116, "Data, Evaluation, and Benchmarks": 572, "Social Aspects->Accountability, Transparency, and Interpretability": 97, "Applications->Neuroscience, Cognitive Science": 62, "Theory->Game Theory": 33, "Deep Learning->Algorithms": 41, "LLMs and Generative AI": 762, "Graphs and Structured Data": 200, "Theory->Reinforcement Learning and Planning": 19, "Applications->Computer Vision": 290, "Deep Learning->Other Representation Learning": 42, "Applications->Time Series": 63, "Optimization->Large Scale, Parallel and Distributed": 23, "Deep Learning->Large Language Models": 593, "Optimization and Training": 402, "General Machine Learning->Causality": 53, "General Machine Learning->Kernel methods": 14, "Probabilistic Methods->Structure Learning": 3, "Healthcare, Bio, and Science": 45, "General Machine Learning->Hardware and Software": 14, "General Machine Learning->Everything Else": 24, "General Machine Learning->Scalable Algorithms": 13, "Deep Learning->Theory": 56, "Applications->Robotics": 84, "Applications->Chemistry, Physics, and Earth Sciences": 125, "Social Aspects->Security": 59, "Theory->Learning Theory": 58, "Social Aspects->Safety": 80, "Theory->Optimization": 21, "Social Aspects->Fairness": 25, "Deep Learning->Graph Neural Networks": 77, "Theory->Deep Learning": 35, "General Machine Learning->Transfer, Multitask and Meta-learning": 48, "Trust, Safety, and Robustness": 154, "Probabilistic Methods->Variational Inference": 7, "Applications->Everything Else": 59, "Social Aspects->Alignment": 40, "Social Aspects->Robustness": 16, "General Machine Learning->Representation Learning": 54, "Theory->Online Learning and Bandits": 34, "Reinforcement Learning->Deep RL": 60, "Deep Learning->Foundation Models": 75, "Reinforcement Learning->Multi-agent": 46, "Reinforcement Learning->Batch/Offline": 42, "General Machine Learning->Evaluation": 63, "Reinforcement Learning->Online": 19, "General Machine Learning->Unsupervised and Semi-supervised Learning": 29, "Probabilistic Methods->Everything Else": 21, "Probabilistic Methods->Monte Carlo and Sampling Methods": 32, "Applications->Health / Medicine": 104, "Deep Learning->Everything Else": 40, "Optimization->Discrete and Combinatorial Optimization": 21, "General Machine Learning->Supervised Learning": 16, "Optimization->Non-Convex": 18, "Theory->Everything Else": 17, "Reinforcement Learning->Everything Else": 37, "General Machine Learning->Sequential, Network, and Time Series Modeling": 16, "Reinforcement Learning->Policy Search": 5, "Social Aspects->Privacy": 56, "Robotics and Embodied AI": 30, "Deep Learning->Sequential Models, Time series": 18, "Optimization->Everything Else": 14, "Deep Learning->Robustness": 46, "Deep Learning->Attention Mechanisms": 50, "Applications->Language, Speech and Dialog": 44, "Applications->Energy": 4, "Optimization->Zero-order and Black-box Optimization": 23, "General ML": 7, "General Machine Learning->Clustering": 11, "Deep Learning->Self-Supervised Learning": 21, "General Machine Learning->Online Learning, Active Learning and Bandits": 16, "Optimization->Stochastic": 11, "Probabilistic Methods->Gaussian Processes": 7, "General Machine Learning->Data": 10, "Reinforcement Learning->Planning": 14, "Probabilistic Methods->Bayesian Models and Methods": 31, "Theory->Probabilistic Methods": 16, "Applications->Social Sciences": 9, "Probabilistic Methods->Spectral Methods": 3, "General Machine Learning->Methodology": 6, "Optimization->Convex": 8, "Social Aspects->Everything Else": 14, "Theory->Domain Adaptation and Transfer Learning": 7, "Reinforcement Learning->Inverse": 3, "Probabilistic Methods->Graphical Models": 2}, "keywords": {"Agents": 809, "Retrieval": 2204, "Benchmark": 3549, "LLM": 2009, "Vision": 2129, "Multimodal": 772, "Diffusion": 731, "Causality": 308, "Robustness": 1576, "RL": 944, "Optimization": 1734, "Robotics": 345, "Transformer": 997, "Theory": 1623, "Fairness": 658, "Graphs": 526, "Healthcare": 367, "Privacy": 281}, "top_institutions": {"Peking University": 323, "Tsinghua University": 320, "Zhejiang University": 276, "University of Science and Technology of China": 211, "Shanghai Jiao Tong University": 202, "Fudan University": 196, "Shanghai Jiaotong University": 192, "National University of Singapore": 192, "Massachusetts Institute of Technology": 186, "Nanyang Technological University": 184, "Tsinghua University, Tsinghua University": 171, "Carnegie Mellon University": 160, "Alibaba Group": 159, "The Chinese University of Hong Kong": 149, "Stanford University": 148, "Google": 146, "University of California, Berkeley": 139, "Nanjing University": 136, "The Hong Kong University of Science and Technology": 127, "University of Oxford": 124, "ByteDance Inc.": 119, "Harbin Institute of Technology": 102, "University of the Chinese Academy of Sciences": 101, "Microsoft": 95, "Hong Kong University of Science and Technology": 95, "University of Electronic Science and Technology of China": 89, "Google DeepMind": 89, "Georgia Institute of Technology": 88, "Meta": 88, "Harvard University": 87, "Beihang University": 86, "University of Cambridge": 85, "Huawei Technologies Ltd.": 83, "ETH Zurich": 83, "Princeton University": 82, "Amazon": 82, "Shanghai Artificial Intelligence Laboratory": 80, "KAIST": 80, "Huazhong University of Science and Technology": 78, "New York University": 75}, "sessions": {"Poster Session 8": 678, "Poster Session 7": 731, "Poster Session 5": 709, "Poster Session 2": 775, "Poster Session 4": 763, "Poster Session 3": 774, "Poster Session 6": 701, "Poster Session 1": 775, "Unscheduled": 728}, "unique_authors": 25946, "unique_institutions": 4777, "avg_authors": 5.66, "author_histogram": {"5": 1020, "9": 339, "3": 1040, "6": 832, "2": 553, "11": 129, "8": 438, "7": 612, "4": 1036, "10": 211, "12+": 291, "1": 133}, "sources": ["https://icml.cc/static/virtual/data/icml-2026-orals-posters.json", "https://icml.cc/static/virtual/data/icml-2026-abstracts.json", "https://openreview.net/group?id=ICML.cc/2026/Conference", "https://icml.cc/Conferences/2026"]}, papers: []};
+let DATA = {summary: {"conference": "ICML 2026", "generated": "2026-06-11T19:09:36+09:00", "n_papers": 6634, "decisions": {"oral": 168, "spotlight": 406, "regular": 5999, "other": 61}, "topics": {"Reinforcement Learning and Agents": 458, "Vision and Multimodal": 337, "Deep Learning->Generative Models and Autoencoders": 184, "Theory and Foundations": 116, "Data, Evaluation, and Benchmarks": 572, "Social Aspects->Accountability, Transparency, and Interpretability": 97, "Applications->Neuroscience, Cognitive Science": 62, "Theory->Game Theory": 33, "Deep Learning->Algorithms": 41, "LLMs and Generative AI": 762, "Graphs and Structured Data": 200, "Theory->Reinforcement Learning and Planning": 19, "Applications->Computer Vision": 290, "Deep Learning->Other Representation Learning": 42, "Applications->Time Series": 63, "Optimization->Large Scale, Parallel and Distributed": 23, "Deep Learning->Large Language Models": 593, "Optimization and Training": 402, "General Machine Learning->Causality": 53, "General Machine Learning->Kernel methods": 14, "Probabilistic Methods->Structure Learning": 3, "Healthcare, Bio, and Science": 45, "General Machine Learning->Hardware and Software": 14, "General Machine Learning->Everything Else": 24, "General Machine Learning->Scalable Algorithms": 13, "Deep Learning->Theory": 56, "Applications->Robotics": 84, "Applications->Chemistry, Physics, and Earth Sciences": 125, "Social Aspects->Security": 59, "Theory->Learning Theory": 58, "Social Aspects->Safety": 80, "Theory->Optimization": 21, "Social Aspects->Fairness": 25, "Deep Learning->Graph Neural Networks": 77, "Theory->Deep Learning": 35, "General Machine Learning->Transfer, Multitask and Meta-learning": 48, "Trust, Safety, and Robustness": 154, "Probabilistic Methods->Variational Inference": 7, "Applications->Everything Else": 59, "Social Aspects->Alignment": 40, "Social Aspects->Robustness": 16, "General Machine Learning->Representation Learning": 54, "Theory->Online Learning and Bandits": 34, "Reinforcement Learning->Deep RL": 60, "Deep Learning->Foundation Models": 75, "Reinforcement Learning->Multi-agent": 46, "Reinforcement Learning->Batch/Offline": 42, "General Machine Learning->Evaluation": 63, "Reinforcement Learning->Online": 19, "General Machine Learning->Unsupervised and Semi-supervised Learning": 29, "Probabilistic Methods->Everything Else": 21, "Probabilistic Methods->Monte Carlo and Sampling Methods": 32, "Applications->Health / Medicine": 104, "Deep Learning->Everything Else": 40, "Optimization->Discrete and Combinatorial Optimization": 21, "General Machine Learning->Supervised Learning": 16, "Optimization->Non-Convex": 18, "Theory->Everything Else": 17, "Reinforcement Learning->Everything Else": 37, "General Machine Learning->Sequential, Network, and Time Series Modeling": 16, "Reinforcement Learning->Policy Search": 5, "Social Aspects->Privacy": 56, "Robotics and Embodied AI": 30, "Deep Learning->Sequential Models, Time series": 18, "Optimization->Everything Else": 14, "Deep Learning->Robustness": 46, "Deep Learning->Attention Mechanisms": 50, "Applications->Language, Speech and Dialog": 44, "Applications->Energy": 4, "Optimization->Zero-order and Black-box Optimization": 23, "General ML": 7, "General Machine Learning->Clustering": 11, "Deep Learning->Self-Supervised Learning": 21, "General Machine Learning->Online Learning, Active Learning and Bandits": 16, "Optimization->Stochastic": 11, "Probabilistic Methods->Gaussian Processes": 7, "General Machine Learning->Data": 10, "Reinforcement Learning->Planning": 14, "Probabilistic Methods->Bayesian Models and Methods": 31, "Theory->Probabilistic Methods": 16, "Applications->Social Sciences": 9, "Probabilistic Methods->Spectral Methods": 3, "General Machine Learning->Methodology": 6, "Optimization->Convex": 8, "Social Aspects->Everything Else": 14, "Theory->Domain Adaptation and Transfer Learning": 7, "Reinforcement Learning->Inverse": 3, "Probabilistic Methods->Graphical Models": 2}, "keywords": {"Agents": 809, "Retrieval": 2204, "Benchmark": 3549, "LLM": 2009, "Vision": 2129, "Multimodal": 772, "Diffusion": 731, "Causality": 308, "Robustness": 1576, "RL": 944, "Optimization": 1734, "Robotics": 345, "Transformer": 997, "Theory": 1623, "Fairness": 658, "Graphs": 526, "Healthcare": 367, "Privacy": 281}, "top_institutions": {"Peking University": 323, "Tsinghua University": 320, "Zhejiang University": 276, "University of Science and Technology of China": 211, "Shanghai Jiao Tong University": 202, "Fudan University": 196, "Shanghai Jiaotong University": 192, "National University of Singapore": 192, "Massachusetts Institute of Technology": 186, "Nanyang Technological University": 184, "Tsinghua University, Tsinghua University": 171, "Carnegie Mellon University": 160, "Alibaba Group": 159, "The Chinese University of Hong Kong": 149, "Stanford University": 148, "Google": 146, "University of California, Berkeley": 139, "Nanjing University": 136, "The Hong Kong University of Science and Technology": 127, "University of Oxford": 124, "ByteDance Inc.": 119, "Harbin Institute of Technology": 102, "University of the Chinese Academy of Sciences": 101, "Microsoft": 95, "Hong Kong University of Science and Technology": 95, "University of Electronic Science and Technology of China": 89, "Google DeepMind": 89, "Georgia Institute of Technology": 88, "Meta": 88, "Harvard University": 87, "Beihang University": 86, "University of Cambridge": 85, "Huawei Technologies Ltd.": 83, "ETH Zurich": 83, "Princeton University": 82, "Amazon": 82, "Shanghai Artificial Intelligence Laboratory": 80, "KAIST": 80, "Huazhong University of Science and Technology": 78, "New York University": 75}, "sessions": {"Poster Session 8": 678, "Poster Session 7": 731, "Poster Session 5": 709, "Poster Session 2": 775, "Poster Session 4": 763, "Poster Session 3": 774, "Poster Session 6": 701, "Poster Session 1": 775, "Unscheduled": 728}, "unique_authors": 25946, "unique_institutions": 4777, "avg_authors": 5.66, "author_histogram": {"5": 1020, "9": 339, "3": 1040, "6": 832, "2": 553, "11": 129, "8": 438, "7": 612, "4": 1036, "10": 211, "12+": 291, "1": 133}, "sources": ["https://icml.cc/static/virtual/data/icml-2026-orals-posters.json", "https://icml.cc/static/virtual/data/icml-2026-abstracts.json", "https://openreview.net/group?id=ICML.cc/2026/Conference", "https://icml.cc/Conferences/2026"]}, papers: []};
 let papers = [];
 let abstractsPromise = null;
 let abstractsLoaded = false;
@@ -368,6 +374,25 @@ const els = {
 function fmt(n) { return Number(n || 0).toLocaleString(); }
 function esc(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function regexEsc(s) {
+  return String(s).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+function queryTerms() {
+  return state.q.trim().split(/\s+/).filter(term => term.length >= 2).sort((a, b) => b.length - a.length);
+}
+function highlightText(s) {
+  let text = esc(s);
+  const terms = queryTerms();
+  if (!terms.length) return text;
+  const pattern = new RegExp(`(${terms.map(term => regexEsc(esc(term))).join('|')})`, 'gi');
+  return text.replace(pattern, '<mark class="search-hit">$1</mark>');
+}
+function highlightRenderedMetadata() {
+  if (!queryTerms().length) return;
+  els.papers.querySelectorAll('.authors').forEach(el => {
+    el.innerHTML = highlightText(el.textContent);
+  });
 }
 function buildSearchText(p) {
   return [
@@ -527,6 +552,7 @@ function filteredPapers() {
 }
 function paperCard(p) {
   const authors = (p.authors || []).slice(0, 16).join(', ') + ((p.authors || []).length > 16 ? `, +${p.authors.length - 16} more` : '');
+  const institutions = (p.institutions || []).slice(0, 8).join(', ');
   const badges = [
     `<span class="badge ${p.decision}">${decisionLabel(p.decision)}</span>`,
     `<span class="badge">${esc(p.topic)}</span>`,
@@ -543,13 +569,13 @@ function paperCard(p) {
   return `<article class="paper${state.abstractsOpen ? ' open' : ''}">
     <div class="paper-top">
       <div>
-        <h3>${esc(p.title)}</h3>
+        <h3>${highlightText(p.title)}</h3>
         <div class="badge-row">${badges}</div>
         <div class="authors">${esc(authors)} · ${esc((p.institutions || []).slice(0, 8).join(', '))} · #${esc(p.number || p.id)}</div>
       </div>
       <button class="toggle" title="Toggle abstract" aria-label="Toggle abstract">${state.abstractsOpen ? '-' : '+'}</button>
     </div>
-    <p class="abstract">${esc(abstractText)}</p>
+    <p class="abstract">${highlightText(abstractText)}</p>
     <div class="links">${links}</div>
   </article>`;
 }
@@ -587,6 +613,7 @@ function render() {
     return;
   }
   els.papers.innerHTML = out.slice(startIndex, endIndex).map(paperCard).join('');
+  highlightRenderedMetadata();
 }
 els.q.addEventListener('input', e => {
   state.q = e.target.value;
@@ -673,7 +700,7 @@ els.papers.addEventListener('click', async e => {
   const index = Array.from(els.papers.querySelectorAll('.paper')).indexOf(card);
   const paper = pagePapers[index];
   const abstract = card.querySelector('.abstract');
-  if (paper && abstract) abstract.textContent = paper.abstract || 'No abstract available.';
+  if (paper && abstract) abstract.innerHTML = highlightText(paper.abstract || 'No abstract available.');
   card.classList.toggle('open');
   btn.textContent = card.classList.contains('open') ? '-' : '+';
 });
