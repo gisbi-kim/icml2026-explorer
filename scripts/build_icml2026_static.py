@@ -23,6 +23,8 @@ OUT_DIR = ROOT / "output"
 RAW_EVENTS = RAW_DIR / "icml-2026-orals-posters.json"
 RAW_ABSTRACTS = RAW_DIR / "icml-2026-abstracts.json"
 OUT_JSON = OUT_DIR / "icml2026_papers.json"
+OUT_INDEX_JSON = OUT_DIR / "icml2026_index.json"
+OUT_ABSTRACTS_JSON = OUT_DIR / "icml2026_abstracts.json"
 OUT_HTML = OUT_DIR / "icml2026_explorer.html"
 
 OPENREVIEW_NOTES_API = "https://api2.openreview.net/notes"
@@ -518,11 +520,41 @@ def write_json(summary: dict, papers: list[dict]) -> None:
         json.dumps({"summary": summary, "papers": papers}, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+    index_papers = []
+    abstract_map = {}
+    index_fields = {
+        "id",
+        "number",
+        "title",
+        "authors",
+        "institutions",
+        "decision",
+        "decision_rank",
+        "topic",
+        "keywords",
+        "author_count",
+        "session",
+        "oral_session",
+        "openreview_url",
+        "pdf_url",
+        "virtual_url",
+        "oral_url",
+    }
+    for paper in papers:
+        abstract_map[paper["id"]] = paper.get("abstract", "")
+        index_paper = {key: paper[key] for key in index_fields if key in paper}
+        index_papers.append(index_paper)
+    OUT_INDEX_JSON.write_text(
+        json.dumps({"summary": summary, "papers": index_papers}, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    OUT_ABSTRACTS_JSON.write_text(
+        json.dumps({"abstracts": abstract_map}, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
 
 
 def build_html(summary: dict, papers: list[dict]) -> str:
-    data_json = json.dumps({"summary": summary, "papers": papers}, ensure_ascii=False)
-    escaped_data = data_json.replace("</", "<\\/")
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -758,7 +790,7 @@ footer {{ color: var(--muted); font-size: 12px; margin-top: 20px; }}
       <a href="https://icml.cc/virtual/2026/papers.html">Official papers page</a>
       <a href="https://openreview.net/group?id=ICML.cc/2026/Conference">OpenReview venue</a>
       <a href="https://icml.cc/Conferences/2026">Official ICML page</a>
-      <a href="icml2026_papers.json">Embedded JSON snapshot</a>
+      <a href="icml2026_papers.json">Full JSON snapshot</a>
     </div>
   </div>
 </header>
@@ -828,25 +860,17 @@ footer {{ color: var(--muted); font-size: 12px; margin-top: 20px; }}
   </div>
 </div>
 </main>
-<script id="paper-data" type="application/json">{escaped_data}</script>
 <script>
-const DATA = JSON.parse(document.getElementById('paper-data').textContent);
-const PAGE_SIZE = 500;
-const papers = DATA.papers.map(p => ({{
-  ...p,
-  searchText: [
-    p.title,
-    (p.authors || []).join(' '),
-    (p.institutions || []).join(' '),
-    p.abstract,
-    p.topic,
-    p.session,
-    p.oral_session,
-    (p.keywords || []).join(' '),
-    p.id,
-    String(p.number || '')
-  ].join(' ').toLowerCase()
-}}));
+const DATA_URL = 'icml2026_index.json';
+const ABSTRACTS_URL = 'icml2026_abstracts.json';
+const FULL_DATA_URL = 'icml2026_papers.json';
+const PAGE_SIZE = 100;
+let DATA = {{summary: {json.dumps(summary, ensure_ascii=False)}, papers: []}};
+let papers = [];
+let abstractsPromise = null;
+let abstractsLoaded = false;
+let renderQueued = false;
+let searchLoadTimer = null;
 const state = {{
   q: '',
   decision: 'all',
@@ -880,6 +904,61 @@ const els = {{
 function fmt(n) {{ return Number(n || 0).toLocaleString(); }}
 function esc(s) {{
   return String(s || '').replace(/[&<>"']/g, c => ({{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}}[c]));
+}}
+function buildSearchText(p) {{
+  return [
+    p.title,
+    (p.authors || []).join(' '),
+    (p.institutions || []).join(' '),
+    p.abstract,
+    p.topic,
+    p.session,
+    p.oral_session,
+    (p.keywords || []).join(' '),
+    p.id,
+    String(p.number || '')
+  ].join(' ').toLowerCase();
+}}
+function hydratePapers(rawPapers) {{
+  papers = rawPapers.map(p => ({{
+    ...p,
+    abstract: p.abstract || '',
+    searchText: buildSearchText(p)
+  }}));
+}}
+async function loadIndex() {{
+  els.papers.innerHTML = '<div class="panel empty">Loading papers...</div>';
+  const resp = await fetch(DATA_URL);
+  if (!resp.ok) throw new Error(`Failed to load ${{DATA_URL}}`);
+  DATA = await resp.json();
+  hydratePapers(DATA.papers || []);
+}}
+async function loadAbstracts() {{
+  if (abstractsLoaded) return;
+  if (!abstractsPromise) {{
+    abstractsPromise = fetch(ABSTRACTS_URL)
+      .then(resp => {{
+        if (!resp.ok) throw new Error(`Failed to load ${{ABSTRACTS_URL}}`);
+        return resp.json();
+      }})
+      .then(payload => {{
+        const abstracts = payload.abstracts || {{}};
+        papers.forEach(p => {{
+          p.abstract = abstracts[p.id] || p.abstract || '';
+          p.searchText = buildSearchText(p);
+        }});
+        abstractsLoaded = true;
+      }});
+  }}
+  await abstractsPromise;
+}}
+function queueRender() {{
+  if (renderQueued) return;
+  renderQueued = true;
+  requestAnimationFrame(() => {{
+    renderQueued = false;
+    render();
+  }});
 }}
 function decisionLabel(d) {{
   return d === 'oral' ? 'Oral' : d === 'spotlight' ? 'Spotlight' : d === 'regular' ? 'Regular' : 'All';
@@ -992,6 +1071,7 @@ function paperCard(p) {{
     p.virtual_url ? `<a href="${{esc(p.virtual_url)}}">Poster page</a>` : '',
     p.oral_url ? `<a href="${{esc(p.oral_url)}}">Oral page</a>` : ''
   ].filter(Boolean).join('');
+  const abstractText = p.abstract || (abstractsLoaded ? 'No abstract available.' : 'Abstracts load when opened or searched.');
   return `<article class="paper${{state.abstractsOpen ? ' open' : ''}}">
     <div class="paper-top">
       <div>
@@ -1001,7 +1081,7 @@ function paperCard(p) {{
       </div>
       <button class="toggle" title="Toggle abstract" aria-label="Toggle abstract">${{state.abstractsOpen ? '-' : '+'}}</button>
     </div>
-    <p class="abstract">${{esc(p.abstract)}}</p>
+    <p class="abstract">${{esc(abstractText)}}</p>
     <div class="links">${{links}}</div>
   </article>`;
 }}
@@ -1039,7 +1119,15 @@ function render() {{
   }}
   els.papers.innerHTML = out.slice(startIndex, endIndex).map(paperCard).join('');
 }}
-els.q.addEventListener('input', e => {{ state.q = e.target.value; resetPage(); render(); }});
+els.q.addEventListener('input', e => {{
+  state.q = e.target.value;
+  resetPage();
+  queueRender();
+  clearTimeout(searchLoadTimer);
+  if (state.q.trim().length >= 3 && !abstractsLoaded) {{
+    searchLoadTimer = setTimeout(() => loadAbstracts().then(queueRender).catch(err => console.error(err)), 350);
+  }}
+}});
 els.decisionSeg.addEventListener('click', e => {{
   const btn = e.target.closest('button[data-decision]');
   if (!btn) return;
@@ -1080,12 +1168,17 @@ function handlePagerClick(e) {{
 }}
 els.pagerTop.addEventListener('click', handlePagerClick);
 els.pagerBottom.addEventListener('click', handlePagerClick);
-els.abstractAllBtn.addEventListener('click', () => {{
+els.abstractAllBtn.addEventListener('click', async () => {{
+  if (!abstractsLoaded) await loadAbstracts();
   state.abstractsOpen = !state.abstractsOpen;
   render();
 }});
-els.downloadBtn.addEventListener('click', () => {{
-  const payload = JSON.stringify({{summary: DATA.summary, papers: filteredPapers()}}, null, 2);
+els.downloadBtn.addEventListener('click', async () => {{
+  const filteredIds = new Set(filteredPapers().map(p => p.id));
+  const resp = await fetch(FULL_DATA_URL);
+  if (!resp.ok) throw new Error(`Failed to load ${{FULL_DATA_URL}}`);
+  const fullData = await resp.json();
+  const payload = JSON.stringify({{summary: fullData.summary, papers: (fullData.papers || []).filter(p => filteredIds.has(p.id))}}, null, 2);
   const blob = new Blob([payload], {{type: 'application/json'}});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -1094,16 +1187,33 @@ els.downloadBtn.addEventListener('click', () => {{
   a.click();
   URL.revokeObjectURL(url);
 }});
-els.papers.addEventListener('click', e => {{
+els.papers.addEventListener('click', async e => {{
   const btn = e.target.closest('.toggle');
   if (!btn) return;
+  if (!abstractsLoaded) await loadAbstracts();
   const card = btn.closest('.paper');
+  const pagePapers = filteredPapers().slice((state.page - 1) * PAGE_SIZE, state.page * PAGE_SIZE);
+  const index = Array.from(els.papers.querySelectorAll('.paper')).indexOf(card);
+  const paper = pagePapers[index];
+  const abstract = card.querySelector('.abstract');
+  if (paper && abstract) abstract.textContent = paper.abstract || 'No abstract available.';
   card.classList.toggle('open');
   btn.textContent = card.classList.contains('open') ? '-' : '+';
 }});
-initFromUrl();
-populateStatic();
-render();
+async function start() {{
+  initFromUrl();
+  populateStatic();
+  try {{
+    await loadIndex();
+    populateStatic();
+    if (state.abstractsOpen || state.q.trim().length >= 3) await loadAbstracts();
+    render();
+  }} catch (err) {{
+    console.error(err);
+    els.papers.innerHTML = '<div class="panel empty">Could not load paper data. Please refresh the page.</div>';
+  }}
+}}
+start();
 </script>
 </body>
 </html>
@@ -1117,6 +1227,8 @@ def main() -> None:
     write_json(summary, papers)
     OUT_HTML.write_text(build_html(summary, papers), encoding="utf-8")
     print(f"Wrote {OUT_JSON} ({len(papers)} papers)")
+    print(f"Wrote {OUT_INDEX_JSON}")
+    print(f"Wrote {OUT_ABSTRACTS_JSON}")
     print(f"Wrote {OUT_HTML}")
     print(json.dumps(summary, ensure_ascii=False, indent=2))
 
