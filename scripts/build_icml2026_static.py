@@ -697,6 +697,18 @@ button.action.compact {{ padding: 0 12px; min-width: 132px; }}
 }}
 .results-head h2 {{ margin: 0; font-size: 17px; }}
 .results-tools {{ display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }}
+.page-size-control {{
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}}
+.compact-select {{
+  width: auto;
+  min-width: 76px;
+  padding: 7px 28px 7px 9px;
+  font-size: 13px;
+}}
 .count {{ color: var(--muted); font-size: 14px; }}
 .pagination {{
   display: flex;
@@ -846,6 +858,12 @@ footer {{ color: var(--muted); font-size: 12px; margin-top: 20px; }}
       <div class="results-head">
         <h2>Papers</h2>
         <div class="results-tools">
+          <label class="page-size-control" for="pageSize">Per page</label>
+          <select id="pageSize" class="compact-select">
+            <option value="100">100</option>
+            <option value="250">250</option>
+            <option value="500">500</option>
+          </select>
           <button class="action compact" id="abstractAllBtn" type="button" aria-pressed="false">Open Abstracts</button>
           <div class="count" id="resultCount"></div>
         </div>
@@ -864,7 +882,8 @@ footer {{ color: var(--muted); font-size: 12px; margin-top: 20px; }}
 const DATA_URL = 'icml2026_index.json';
 const ABSTRACTS_URL = 'icml2026_abstracts.json';
 const FULL_DATA_URL = 'icml2026_papers.json';
-const PAGE_SIZE = 100;
+const DEFAULT_PAGE_SIZE = 100;
+const PAGE_SIZE_OPTIONS = [100, 250, 500];
 let DATA = {{summary: {json.dumps(summary, ensure_ascii=False)}, papers: []}};
 let papers = [];
 let abstractsPromise = null;
@@ -879,6 +898,7 @@ const state = {{
   hasVirtual: false,
   keyword: '',
   page: 1,
+  pageSize: DEFAULT_PAGE_SIZE,
   abstractsOpen: false
 }};
 const els = {{
@@ -896,6 +916,7 @@ const els = {{
   authorChart: document.getElementById('authorChart'),
   papers: document.getElementById('papers'),
   resultCount: document.getElementById('resultCount'),
+  pageSize: document.getElementById('pageSize'),
   abstractAllBtn: document.getElementById('abstractAllBtn'),
   pagerTop: document.getElementById('pagerTop'),
   pagerBottom: document.getElementById('pagerBottom')
@@ -972,10 +993,13 @@ function initFromUrl() {{
   state.keyword = params.get('keyword') || '';
   state.hasVirtual = params.get('virtual') === '1';
   state.page = Math.max(1, Number(params.get('page') || 1));
+  const requestedPageSize = Number(params.get('per_page') || DEFAULT_PAGE_SIZE);
+  state.pageSize = PAGE_SIZE_OPTIONS.includes(requestedPageSize) ? requestedPageSize : DEFAULT_PAGE_SIZE;
   state.abstractsOpen = params.get('abstracts') === 'open';
   els.q.value = state.q;
   els.sort.value = state.sort;
   els.hasVirtual.checked = state.hasVirtual;
+  els.pageSize.value = String(state.pageSize);
 }}
 function updateUrl() {{
   const params = new URLSearchParams();
@@ -986,6 +1010,7 @@ function updateUrl() {{
   if (state.keyword) params.set('keyword', state.keyword);
   if (state.hasVirtual) params.set('virtual', '1');
   if (state.page > 1) params.set('page', String(state.page));
+  if (state.pageSize !== DEFAULT_PAGE_SIZE) params.set('per_page', String(state.pageSize));
   if (state.abstractsOpen) params.set('abstracts', 'open');
   const query = params.toString();
   history.replaceState(null, '', query ? `?${{query}}` : location.pathname);
@@ -1091,23 +1116,24 @@ function paginationHtml(totalPages) {{
   const next = Math.min(totalPages, state.page + 1);
   return `<nav class="pagination" aria-label="Paper pages">
     <button class="page-btn" data-page="${{prev}}" ${{state.page === 1 ? 'disabled' : ''}} aria-label="Previous page" title="Previous page">&larr;</button>
-    <div class="page-label">Page ${{fmt(state.page)}} / ${{fmt(totalPages)}} &middot; max ${{fmt(PAGE_SIZE)}} cards</div>
+    <div class="page-label">Page ${{fmt(state.page)}} / ${{fmt(totalPages)}} &middot; max ${{fmt(state.pageSize)}} cards</div>
     <button class="page-btn" data-page="${{next}}" ${{state.page === totalPages ? 'disabled' : ''}} aria-label="Next page" title="Next page">&rarr;</button>
   </nav>`;
 }}
 function render() {{
   document.querySelectorAll('#decisionSeg button').forEach(btn => btn.classList.toggle('active', btn.dataset.decision === state.decision));
   els.topic.value = state.topic;
+  els.pageSize.value = String(state.pageSize);
   els.abstractAllBtn.textContent = state.abstractsOpen ? 'Close Abstracts' : 'Open Abstracts';
   els.abstractAllBtn.setAttribute('aria-pressed', state.abstractsOpen ? 'true' : 'false');
   const out = filteredPapers();
-  const totalPages = Math.max(1, Math.ceil(out.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(out.length / state.pageSize));
   if (state.page > totalPages) state.page = totalPages;
   if (state.page < 1) state.page = 1;
   updateUrl();
   renderCharts(out);
-  const startIndex = out.length ? (state.page - 1) * PAGE_SIZE : 0;
-  const endIndex = Math.min(out.length, startIndex + PAGE_SIZE);
+  const startIndex = out.length ? (state.page - 1) * state.pageSize : 0;
+  const endIndex = Math.min(out.length, startIndex + state.pageSize);
   const rangeLabel = out.length ? `${{fmt(startIndex + 1)}}-${{fmt(endIndex)}} of ${{fmt(out.length)}}` : `0 of ${{fmt(out.length)}}`;
   els.resultCount.textContent = `${{rangeLabel}} filtered · ${{fmt(papers.length)}} total`;
   const pager = paginationHtml(totalPages);
@@ -1138,6 +1164,12 @@ els.decisionSeg.addEventListener('click', e => {{
 els.topic.addEventListener('change', e => {{ state.topic = e.target.value; resetPage(); render(); }});
 els.sort.addEventListener('change', e => {{ state.sort = e.target.value; resetPage(); render(); }});
 els.hasVirtual.addEventListener('change', e => {{ state.hasVirtual = e.target.checked; resetPage(); render(); }});
+els.pageSize.addEventListener('change', e => {{
+  const nextPageSize = Number(e.target.value);
+  state.pageSize = PAGE_SIZE_OPTIONS.includes(nextPageSize) ? nextPageSize : DEFAULT_PAGE_SIZE;
+  resetPage();
+  render();
+}});
 els.keywordChips.addEventListener('click', e => {{
   const chip = e.target.closest('button[data-keyword]');
   if (!chip) return;
@@ -1153,10 +1185,12 @@ els.resetBtn.addEventListener('click', () => {{
   state.hasVirtual = false;
   state.keyword = '';
   state.page = 1;
+  state.pageSize = DEFAULT_PAGE_SIZE;
   state.abstractsOpen = false;
   els.q.value = '';
   els.sort.value = 'decision';
   els.hasVirtual.checked = false;
+  els.pageSize.value = String(DEFAULT_PAGE_SIZE);
   render();
 }});
 function handlePagerClick(e) {{
@@ -1192,7 +1226,7 @@ els.papers.addEventListener('click', async e => {{
   if (!btn) return;
   if (!abstractsLoaded) await loadAbstracts();
   const card = btn.closest('.paper');
-  const pagePapers = filteredPapers().slice((state.page - 1) * PAGE_SIZE, state.page * PAGE_SIZE);
+  const pagePapers = filteredPapers().slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
   const index = Array.from(els.papers.querySelectorAll('.paper')).indexOf(card);
   const paper = pagePapers[index];
   const abstract = card.querySelector('.abstract');

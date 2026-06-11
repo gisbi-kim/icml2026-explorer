@@ -140,6 +140,18 @@ button.action.compact { padding: 0 12px; min-width: 132px; }
 }
 .results-head h2 { margin: 0; font-size: 17px; }
 .results-tools { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.page-size-control {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.compact-select {
+  width: auto;
+  min-width: 76px;
+  padding: 7px 28px 7px 9px;
+  font-size: 13px;
+}
 .count { color: var(--muted); font-size: 14px; }
 .pagination {
   display: flex;
@@ -228,7 +240,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 20px; }
 <header>
   <div class="wrap">
     <h1>ICML 2026 Paper Explorer</h1>
-    <p class="subhead">Accepted papers from official ICML virtual data · Seoul, South Korea · July 6-11, 2026 · Generated 2026-06-11T18:41:13+09:00</p>
+    <p class="subhead">Accepted papers from official ICML virtual data · Seoul, South Korea · July 6-11, 2026 · Generated 2026-06-11T18:59:01+09:00</p>
     <div class="source-row">
       <a href="https://icml.cc/virtual/2026/papers.html">Official papers page</a>
       <a href="https://openreview.net/group?id=ICML.cc/2026/Conference">OpenReview venue</a>
@@ -289,6 +301,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 20px; }
       <div class="results-head">
         <h2>Papers</h2>
         <div class="results-tools">
+          <label class="page-size-control" for="pageSize">Per page</label>
+          <select id="pageSize" class="compact-select">
+            <option value="100">100</option>
+            <option value="250">250</option>
+            <option value="500">500</option>
+          </select>
           <button class="action compact" id="abstractAllBtn" type="button" aria-pressed="false">Open Abstracts</button>
           <div class="count" id="resultCount"></div>
         </div>
@@ -307,8 +325,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 20px; }
 const DATA_URL = 'icml2026_index.json';
 const ABSTRACTS_URL = 'icml2026_abstracts.json';
 const FULL_DATA_URL = 'icml2026_papers.json';
-const PAGE_SIZE = 100;
-let DATA = {summary: {"conference": "ICML 2026", "generated": "2026-06-11T18:41:13+09:00", "n_papers": 6634, "decisions": {"oral": 168, "spotlight": 406, "regular": 5999, "other": 61}, "topics": {"Reinforcement Learning and Agents": 458, "Vision and Multimodal": 337, "Deep Learning->Generative Models and Autoencoders": 184, "Theory and Foundations": 116, "Data, Evaluation, and Benchmarks": 572, "Social Aspects->Accountability, Transparency, and Interpretability": 97, "Applications->Neuroscience, Cognitive Science": 62, "Theory->Game Theory": 33, "Deep Learning->Algorithms": 41, "LLMs and Generative AI": 762, "Graphs and Structured Data": 200, "Theory->Reinforcement Learning and Planning": 19, "Applications->Computer Vision": 290, "Deep Learning->Other Representation Learning": 42, "Applications->Time Series": 63, "Optimization->Large Scale, Parallel and Distributed": 23, "Deep Learning->Large Language Models": 593, "Optimization and Training": 402, "General Machine Learning->Causality": 53, "General Machine Learning->Kernel methods": 14, "Probabilistic Methods->Structure Learning": 3, "Healthcare, Bio, and Science": 45, "General Machine Learning->Hardware and Software": 14, "General Machine Learning->Everything Else": 24, "General Machine Learning->Scalable Algorithms": 13, "Deep Learning->Theory": 56, "Applications->Robotics": 84, "Applications->Chemistry, Physics, and Earth Sciences": 125, "Social Aspects->Security": 59, "Theory->Learning Theory": 58, "Social Aspects->Safety": 80, "Theory->Optimization": 21, "Social Aspects->Fairness": 25, "Deep Learning->Graph Neural Networks": 77, "Theory->Deep Learning": 35, "General Machine Learning->Transfer, Multitask and Meta-learning": 48, "Trust, Safety, and Robustness": 154, "Probabilistic Methods->Variational Inference": 7, "Applications->Everything Else": 59, "Social Aspects->Alignment": 40, "Social Aspects->Robustness": 16, "General Machine Learning->Representation Learning": 54, "Theory->Online Learning and Bandits": 34, "Reinforcement Learning->Deep RL": 60, "Deep Learning->Foundation Models": 75, "Reinforcement Learning->Multi-agent": 46, "Reinforcement Learning->Batch/Offline": 42, "General Machine Learning->Evaluation": 63, "Reinforcement Learning->Online": 19, "General Machine Learning->Unsupervised and Semi-supervised Learning": 29, "Probabilistic Methods->Everything Else": 21, "Probabilistic Methods->Monte Carlo and Sampling Methods": 32, "Applications->Health / Medicine": 104, "Deep Learning->Everything Else": 40, "Optimization->Discrete and Combinatorial Optimization": 21, "General Machine Learning->Supervised Learning": 16, "Optimization->Non-Convex": 18, "Theory->Everything Else": 17, "Reinforcement Learning->Everything Else": 37, "General Machine Learning->Sequential, Network, and Time Series Modeling": 16, "Reinforcement Learning->Policy Search": 5, "Social Aspects->Privacy": 56, "Robotics and Embodied AI": 30, "Deep Learning->Sequential Models, Time series": 18, "Optimization->Everything Else": 14, "Deep Learning->Robustness": 46, "Deep Learning->Attention Mechanisms": 50, "Applications->Language, Speech and Dialog": 44, "Applications->Energy": 4, "Optimization->Zero-order and Black-box Optimization": 23, "General ML": 7, "General Machine Learning->Clustering": 11, "Deep Learning->Self-Supervised Learning": 21, "General Machine Learning->Online Learning, Active Learning and Bandits": 16, "Optimization->Stochastic": 11, "Probabilistic Methods->Gaussian Processes": 7, "General Machine Learning->Data": 10, "Reinforcement Learning->Planning": 14, "Probabilistic Methods->Bayesian Models and Methods": 31, "Theory->Probabilistic Methods": 16, "Applications->Social Sciences": 9, "Probabilistic Methods->Spectral Methods": 3, "General Machine Learning->Methodology": 6, "Optimization->Convex": 8, "Social Aspects->Everything Else": 14, "Theory->Domain Adaptation and Transfer Learning": 7, "Reinforcement Learning->Inverse": 3, "Probabilistic Methods->Graphical Models": 2}, "keywords": {"Agents": 809, "Retrieval": 2204, "Benchmark": 3549, "LLM": 2009, "Vision": 2129, "Multimodal": 772, "Diffusion": 731, "Causality": 308, "Robustness": 1576, "RL": 944, "Optimization": 1734, "Robotics": 345, "Transformer": 997, "Theory": 1623, "Fairness": 658, "Graphs": 526, "Healthcare": 367, "Privacy": 281}, "top_institutions": {"Peking University": 323, "Tsinghua University": 320, "Zhejiang University": 276, "University of Science and Technology of China": 211, "Shanghai Jiao Tong University": 202, "Fudan University": 196, "Shanghai Jiaotong University": 192, "National University of Singapore": 192, "Massachusetts Institute of Technology": 186, "Nanyang Technological University": 184, "Tsinghua University, Tsinghua University": 171, "Carnegie Mellon University": 160, "Alibaba Group": 159, "The Chinese University of Hong Kong": 149, "Stanford University": 148, "Google": 146, "University of California, Berkeley": 139, "Nanjing University": 136, "The Hong Kong University of Science and Technology": 127, "University of Oxford": 124, "ByteDance Inc.": 119, "Harbin Institute of Technology": 102, "University of the Chinese Academy of Sciences": 101, "Microsoft": 95, "Hong Kong University of Science and Technology": 95, "University of Electronic Science and Technology of China": 89, "Google DeepMind": 89, "Georgia Institute of Technology": 88, "Meta": 88, "Harvard University": 87, "Beihang University": 86, "University of Cambridge": 85, "Huawei Technologies Ltd.": 83, "ETH Zurich": 83, "Princeton University": 82, "Amazon": 82, "Shanghai Artificial Intelligence Laboratory": 80, "KAIST": 80, "Huazhong University of Science and Technology": 78, "New York University": 75}, "sessions": {"Poster Session 8": 678, "Poster Session 7": 731, "Poster Session 5": 709, "Poster Session 2": 775, "Poster Session 4": 763, "Poster Session 3": 774, "Poster Session 6": 701, "Poster Session 1": 775, "Unscheduled": 728}, "unique_authors": 25946, "unique_institutions": 4777, "avg_authors": 5.66, "author_histogram": {"5": 1020, "9": 339, "3": 1040, "6": 832, "2": 553, "11": 129, "8": 438, "7": 612, "4": 1036, "10": 211, "12+": 291, "1": 133}, "sources": ["https://icml.cc/static/virtual/data/icml-2026-orals-posters.json", "https://icml.cc/static/virtual/data/icml-2026-abstracts.json", "https://openreview.net/group?id=ICML.cc/2026/Conference", "https://icml.cc/Conferences/2026"]}, papers: []};
+const DEFAULT_PAGE_SIZE = 100;
+const PAGE_SIZE_OPTIONS = [100, 250, 500];
+let DATA = {summary: {"conference": "ICML 2026", "generated": "2026-06-11T18:59:01+09:00", "n_papers": 6634, "decisions": {"oral": 168, "spotlight": 406, "regular": 5999, "other": 61}, "topics": {"Reinforcement Learning and Agents": 458, "Vision and Multimodal": 337, "Deep Learning->Generative Models and Autoencoders": 184, "Theory and Foundations": 116, "Data, Evaluation, and Benchmarks": 572, "Social Aspects->Accountability, Transparency, and Interpretability": 97, "Applications->Neuroscience, Cognitive Science": 62, "Theory->Game Theory": 33, "Deep Learning->Algorithms": 41, "LLMs and Generative AI": 762, "Graphs and Structured Data": 200, "Theory->Reinforcement Learning and Planning": 19, "Applications->Computer Vision": 290, "Deep Learning->Other Representation Learning": 42, "Applications->Time Series": 63, "Optimization->Large Scale, Parallel and Distributed": 23, "Deep Learning->Large Language Models": 593, "Optimization and Training": 402, "General Machine Learning->Causality": 53, "General Machine Learning->Kernel methods": 14, "Probabilistic Methods->Structure Learning": 3, "Healthcare, Bio, and Science": 45, "General Machine Learning->Hardware and Software": 14, "General Machine Learning->Everything Else": 24, "General Machine Learning->Scalable Algorithms": 13, "Deep Learning->Theory": 56, "Applications->Robotics": 84, "Applications->Chemistry, Physics, and Earth Sciences": 125, "Social Aspects->Security": 59, "Theory->Learning Theory": 58, "Social Aspects->Safety": 80, "Theory->Optimization": 21, "Social Aspects->Fairness": 25, "Deep Learning->Graph Neural Networks": 77, "Theory->Deep Learning": 35, "General Machine Learning->Transfer, Multitask and Meta-learning": 48, "Trust, Safety, and Robustness": 154, "Probabilistic Methods->Variational Inference": 7, "Applications->Everything Else": 59, "Social Aspects->Alignment": 40, "Social Aspects->Robustness": 16, "General Machine Learning->Representation Learning": 54, "Theory->Online Learning and Bandits": 34, "Reinforcement Learning->Deep RL": 60, "Deep Learning->Foundation Models": 75, "Reinforcement Learning->Multi-agent": 46, "Reinforcement Learning->Batch/Offline": 42, "General Machine Learning->Evaluation": 63, "Reinforcement Learning->Online": 19, "General Machine Learning->Unsupervised and Semi-supervised Learning": 29, "Probabilistic Methods->Everything Else": 21, "Probabilistic Methods->Monte Carlo and Sampling Methods": 32, "Applications->Health / Medicine": 104, "Deep Learning->Everything Else": 40, "Optimization->Discrete and Combinatorial Optimization": 21, "General Machine Learning->Supervised Learning": 16, "Optimization->Non-Convex": 18, "Theory->Everything Else": 17, "Reinforcement Learning->Everything Else": 37, "General Machine Learning->Sequential, Network, and Time Series Modeling": 16, "Reinforcement Learning->Policy Search": 5, "Social Aspects->Privacy": 56, "Robotics and Embodied AI": 30, "Deep Learning->Sequential Models, Time series": 18, "Optimization->Everything Else": 14, "Deep Learning->Robustness": 46, "Deep Learning->Attention Mechanisms": 50, "Applications->Language, Speech and Dialog": 44, "Applications->Energy": 4, "Optimization->Zero-order and Black-box Optimization": 23, "General ML": 7, "General Machine Learning->Clustering": 11, "Deep Learning->Self-Supervised Learning": 21, "General Machine Learning->Online Learning, Active Learning and Bandits": 16, "Optimization->Stochastic": 11, "Probabilistic Methods->Gaussian Processes": 7, "General Machine Learning->Data": 10, "Reinforcement Learning->Planning": 14, "Probabilistic Methods->Bayesian Models and Methods": 31, "Theory->Probabilistic Methods": 16, "Applications->Social Sciences": 9, "Probabilistic Methods->Spectral Methods": 3, "General Machine Learning->Methodology": 6, "Optimization->Convex": 8, "Social Aspects->Everything Else": 14, "Theory->Domain Adaptation and Transfer Learning": 7, "Reinforcement Learning->Inverse": 3, "Probabilistic Methods->Graphical Models": 2}, "keywords": {"Agents": 809, "Retrieval": 2204, "Benchmark": 3549, "LLM": 2009, "Vision": 2129, "Multimodal": 772, "Diffusion": 731, "Causality": 308, "Robustness": 1576, "RL": 944, "Optimization": 1734, "Robotics": 345, "Transformer": 997, "Theory": 1623, "Fairness": 658, "Graphs": 526, "Healthcare": 367, "Privacy": 281}, "top_institutions": {"Peking University": 323, "Tsinghua University": 320, "Zhejiang University": 276, "University of Science and Technology of China": 211, "Shanghai Jiao Tong University": 202, "Fudan University": 196, "Shanghai Jiaotong University": 192, "National University of Singapore": 192, "Massachusetts Institute of Technology": 186, "Nanyang Technological University": 184, "Tsinghua University, Tsinghua University": 171, "Carnegie Mellon University": 160, "Alibaba Group": 159, "The Chinese University of Hong Kong": 149, "Stanford University": 148, "Google": 146, "University of California, Berkeley": 139, "Nanjing University": 136, "The Hong Kong University of Science and Technology": 127, "University of Oxford": 124, "ByteDance Inc.": 119, "Harbin Institute of Technology": 102, "University of the Chinese Academy of Sciences": 101, "Microsoft": 95, "Hong Kong University of Science and Technology": 95, "University of Electronic Science and Technology of China": 89, "Google DeepMind": 89, "Georgia Institute of Technology": 88, "Meta": 88, "Harvard University": 87, "Beihang University": 86, "University of Cambridge": 85, "Huawei Technologies Ltd.": 83, "ETH Zurich": 83, "Princeton University": 82, "Amazon": 82, "Shanghai Artificial Intelligence Laboratory": 80, "KAIST": 80, "Huazhong University of Science and Technology": 78, "New York University": 75}, "sessions": {"Poster Session 8": 678, "Poster Session 7": 731, "Poster Session 5": 709, "Poster Session 2": 775, "Poster Session 4": 763, "Poster Session 3": 774, "Poster Session 6": 701, "Poster Session 1": 775, "Unscheduled": 728}, "unique_authors": 25946, "unique_institutions": 4777, "avg_authors": 5.66, "author_histogram": {"5": 1020, "9": 339, "3": 1040, "6": 832, "2": 553, "11": 129, "8": 438, "7": 612, "4": 1036, "10": 211, "12+": 291, "1": 133}, "sources": ["https://icml.cc/static/virtual/data/icml-2026-orals-posters.json", "https://icml.cc/static/virtual/data/icml-2026-abstracts.json", "https://openreview.net/group?id=ICML.cc/2026/Conference", "https://icml.cc/Conferences/2026"]}, papers: []};
 let papers = [];
 let abstractsPromise = null;
 let abstractsLoaded = false;
@@ -322,6 +341,7 @@ const state = {
   hasVirtual: false,
   keyword: '',
   page: 1,
+  pageSize: DEFAULT_PAGE_SIZE,
   abstractsOpen: false
 };
 const els = {
@@ -339,6 +359,7 @@ const els = {
   authorChart: document.getElementById('authorChart'),
   papers: document.getElementById('papers'),
   resultCount: document.getElementById('resultCount'),
+  pageSize: document.getElementById('pageSize'),
   abstractAllBtn: document.getElementById('abstractAllBtn'),
   pagerTop: document.getElementById('pagerTop'),
   pagerBottom: document.getElementById('pagerBottom')
@@ -415,10 +436,13 @@ function initFromUrl() {
   state.keyword = params.get('keyword') || '';
   state.hasVirtual = params.get('virtual') === '1';
   state.page = Math.max(1, Number(params.get('page') || 1));
+  const requestedPageSize = Number(params.get('per_page') || DEFAULT_PAGE_SIZE);
+  state.pageSize = PAGE_SIZE_OPTIONS.includes(requestedPageSize) ? requestedPageSize : DEFAULT_PAGE_SIZE;
   state.abstractsOpen = params.get('abstracts') === 'open';
   els.q.value = state.q;
   els.sort.value = state.sort;
   els.hasVirtual.checked = state.hasVirtual;
+  els.pageSize.value = String(state.pageSize);
 }
 function updateUrl() {
   const params = new URLSearchParams();
@@ -429,6 +453,7 @@ function updateUrl() {
   if (state.keyword) params.set('keyword', state.keyword);
   if (state.hasVirtual) params.set('virtual', '1');
   if (state.page > 1) params.set('page', String(state.page));
+  if (state.pageSize !== DEFAULT_PAGE_SIZE) params.set('per_page', String(state.pageSize));
   if (state.abstractsOpen) params.set('abstracts', 'open');
   const query = params.toString();
   history.replaceState(null, '', query ? `?${query}` : location.pathname);
@@ -534,23 +559,24 @@ function paginationHtml(totalPages) {
   const next = Math.min(totalPages, state.page + 1);
   return `<nav class="pagination" aria-label="Paper pages">
     <button class="page-btn" data-page="${prev}" ${state.page === 1 ? 'disabled' : ''} aria-label="Previous page" title="Previous page">&larr;</button>
-    <div class="page-label">Page ${fmt(state.page)} / ${fmt(totalPages)} &middot; max ${fmt(PAGE_SIZE)} cards</div>
+    <div class="page-label">Page ${fmt(state.page)} / ${fmt(totalPages)} &middot; max ${fmt(state.pageSize)} cards</div>
     <button class="page-btn" data-page="${next}" ${state.page === totalPages ? 'disabled' : ''} aria-label="Next page" title="Next page">&rarr;</button>
   </nav>`;
 }
 function render() {
   document.querySelectorAll('#decisionSeg button').forEach(btn => btn.classList.toggle('active', btn.dataset.decision === state.decision));
   els.topic.value = state.topic;
+  els.pageSize.value = String(state.pageSize);
   els.abstractAllBtn.textContent = state.abstractsOpen ? 'Close Abstracts' : 'Open Abstracts';
   els.abstractAllBtn.setAttribute('aria-pressed', state.abstractsOpen ? 'true' : 'false');
   const out = filteredPapers();
-  const totalPages = Math.max(1, Math.ceil(out.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(out.length / state.pageSize));
   if (state.page > totalPages) state.page = totalPages;
   if (state.page < 1) state.page = 1;
   updateUrl();
   renderCharts(out);
-  const startIndex = out.length ? (state.page - 1) * PAGE_SIZE : 0;
-  const endIndex = Math.min(out.length, startIndex + PAGE_SIZE);
+  const startIndex = out.length ? (state.page - 1) * state.pageSize : 0;
+  const endIndex = Math.min(out.length, startIndex + state.pageSize);
   const rangeLabel = out.length ? `${fmt(startIndex + 1)}-${fmt(endIndex)} of ${fmt(out.length)}` : `0 of ${fmt(out.length)}`;
   els.resultCount.textContent = `${rangeLabel} filtered · ${fmt(papers.length)} total`;
   const pager = paginationHtml(totalPages);
@@ -581,6 +607,12 @@ els.decisionSeg.addEventListener('click', e => {
 els.topic.addEventListener('change', e => { state.topic = e.target.value; resetPage(); render(); });
 els.sort.addEventListener('change', e => { state.sort = e.target.value; resetPage(); render(); });
 els.hasVirtual.addEventListener('change', e => { state.hasVirtual = e.target.checked; resetPage(); render(); });
+els.pageSize.addEventListener('change', e => {
+  const nextPageSize = Number(e.target.value);
+  state.pageSize = PAGE_SIZE_OPTIONS.includes(nextPageSize) ? nextPageSize : DEFAULT_PAGE_SIZE;
+  resetPage();
+  render();
+});
 els.keywordChips.addEventListener('click', e => {
   const chip = e.target.closest('button[data-keyword]');
   if (!chip) return;
@@ -596,10 +628,12 @@ els.resetBtn.addEventListener('click', () => {
   state.hasVirtual = false;
   state.keyword = '';
   state.page = 1;
+  state.pageSize = DEFAULT_PAGE_SIZE;
   state.abstractsOpen = false;
   els.q.value = '';
   els.sort.value = 'decision';
   els.hasVirtual.checked = false;
+  els.pageSize.value = String(DEFAULT_PAGE_SIZE);
   render();
 });
 function handlePagerClick(e) {
@@ -635,7 +669,7 @@ els.papers.addEventListener('click', async e => {
   if (!btn) return;
   if (!abstractsLoaded) await loadAbstracts();
   const card = btn.closest('.paper');
-  const pagePapers = filteredPapers().slice((state.page - 1) * PAGE_SIZE, state.page * PAGE_SIZE);
+  const pagePapers = filteredPapers().slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
   const index = Array.from(els.papers.querySelectorAll('.paper')).indexOf(card);
   const paper = pagePapers[index];
   const abstract = card.querySelector('.abstract');
