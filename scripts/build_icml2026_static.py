@@ -819,7 +819,7 @@ footer {{ color: var(--muted); font-size: 12px; margin-top: 20px; }}
     <aside class="panel filters">
       <h2>Filters</h2>
       <label for="q">Search</label>
-      <input id="q" type="search" placeholder="title, author, abstract, keyword">
+      <input id="q" type="search" placeholder="title, author, abstract, keyword; comma separates terms">
       <label>Decision</label>
       <div class="segmented" id="decisionSeg">
         <button data-decision="all" class="active">All</button>
@@ -935,8 +935,11 @@ function esc(s) {{
 function regexEsc(s) {{
   return String(s).replace(/[-\\/\\\\^$*+?.()|[\\]{{}}]/g, '\\\\$&');
 }}
+function searchTerms() {{
+  return state.q.trim().toLowerCase().split(',').map(term => term.trim()).filter(Boolean);
+}}
 function queryTerms() {{
-  return state.q.trim().split(/\\s+/).filter(term => term.length >= 2).sort((a, b) => b.length - a.length);
+  return searchTerms().filter(term => term.length >= 2).sort((a, b) => b.length - a.length);
 }}
 function highlightText(s) {{
   let text = esc(s);
@@ -1090,13 +1093,13 @@ function renderCharts(filtered) {{
   els.authorChart.innerHTML = barChart(orderedAuthor, {{limit: 20, colors: (_, i) => i % 2 ? 'green' : ''}});
 }}
 function filteredPapers() {{
-  const q = state.q.trim().toLowerCase();
+  const terms = searchTerms();
   let out = papers.filter(p => {{
     if (state.decision !== 'all' && p.decision !== state.decision) return false;
     if (state.topic !== 'all' && p.topic !== state.topic) return false;
     if (state.keyword && !(p.keywords || []).includes(state.keyword)) return false;
     if (state.hasVirtual && !p.virtual_url) return false;
-    if (q && !p.searchText.includes(q)) return false;
+    if (terms.length && !terms.every(term => p.searchText.includes(term))) return false;
     return true;
   }});
   out.sort((a,b) => {{
